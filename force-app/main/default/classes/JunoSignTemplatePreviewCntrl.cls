@@ -223,6 +223,8 @@ public static List<Id> createPageTabs(String droppedElementsJson) {
 
             JunoDoc__Junodoc_Page_Tab__c ele = new JunoDoc__Junodoc_Page_Tab__c();
             ele.JunoDoc__Type__c = dto.droptype;
+            ele.JunoDoc__Page_Height__c = dto.pageHeight != null ? String.valueOf(dto.pageHeight) : '0';
+            ele.JunoDoc__Page_Width__c = dto.pageWidth != null ? String.valueOf(dto.pageWidth) : '0';
             ele.JunoDoc__Pos_Left__c = String.valueOf(dto.x != null ? dto.x : 0);
             ele.JunoDoc__Pos_Top__c = String.valueOf(dto.y != null ? dto.y : 0);
             ele.Name = 'divPageNo_' + (dto.pgno != null ? dto.pgno : 0);
@@ -318,6 +320,8 @@ public static List<Id> createPageTabs(String droppedElementsJson) {
         @AuraEnabled public String droptype {get; set;}
         @AuraEnabled public Decimal x {get; set;}
         @AuraEnabled public Decimal y {get; set;}
+        @AuraEnabled public Decimal pageHeight {get; set;}
+        @AuraEnabled public Decimal pageWidth {get; set;}
         @AuraEnabled public Integer pgno {get; set;}
         @AuraEnabled public String typeLabel {get; set;}
         @AuraEnabled public Integer recipientOrder {get; set;}

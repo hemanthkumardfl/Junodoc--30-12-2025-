@@ -2574,20 +2574,25 @@
                                 continue;
                             }
 
-                            const pageWidth = dims.width;
-                            const pageHeight = dims.height;
+                            let pageWidth = dims.width;
+                            let pageHeight = dims.height;
+                            pageWidth = Number(field['pageWidth'].replace('px', ''));
+                            pageHeight = Number(field['pageHeight'].replace('px', ''));
 
                             // Original pixel positions from preparer
                             const leftPx = Number(field['left'].replace('px', ''));
                             const topPx = Number(field['top'].replace('px', ''));
 
+
                             // Convert to percentage of actual rendered page
                             let leftPercent = (leftPx / pageWidth) * 100;
                             let topPercent = (topPx / pageHeight) * 100;
 
+                            console.log('topPercent >> '+topPercent);
+
                             // 🔥 Critical Fix: Adjust top upward to correct visual shift
                             // Most setups show fields ~1.5–2% too low due to box-shadow/margins
-                            topPercent = Math.max(0, topPercent - 0.5);
+                            topPercent = topPercent //Math.max(0, topPercent - 1);
 
                             // Create the field container
                             let fieldNode = document.createElement('DIV');
@@ -2622,7 +2627,7 @@
                                     fieldNode.innerHTML = `
                                         <div class="signaturedragfield textInput"
                                             data-type="${dataType}"
-                                            style="padding:0px !important;justify-content:center;width:70%;max-width:100px;min-width:60px;font-size:xx-small;height:20px;"
+                                            style="padding:0px !important;justify-content:center;width:70%;max-width:100px;min-width:80px;font-size:xx-small;height:20px;"
                                             onclick="openSignaturePad(event)">
                                             ${placeholderText}
                                         </div>`;

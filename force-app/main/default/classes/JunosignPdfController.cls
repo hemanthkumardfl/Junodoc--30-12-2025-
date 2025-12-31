@@ -161,7 +161,7 @@ pdfPage.getParameters().put('DocTemplateId', id);*/
         //String trancId =  transcid;
         List<JunoDoc__Junodoc_Page_Tab__c> pageTabsList = [select Id,Name, JunoDoc__Pos_Left__c, JunoDoc__Pos_Top__c, 
                                                            JunoDoc__Sign_Completed__c,JunoDoc__Type__c,JunoDoc__Linked_To__c,
-                                                           JunoDoc__Recipient_Sort_Order__c  
+                                                           JunoDoc__Recipient_Sort_Order__c ,JunoDoc__Page_Height__c,JunoDoc__Page_Width__c
                                                            from JunoDoc__Junodoc_Page_Tab__c 
                                                            where JunoDoc__Sign_Completed__c = false 
                                                            AND JunoDoc__Linked_To__c=:transcid 
@@ -187,6 +187,8 @@ pdfPage.getParameters().put('DocTemplateId', id);*/
         public String Name { get; set; }
         public String left { get; set; }         // Will be like '120px'
         public String top { get; set; }          // Will be like '240px'
+        public String pageHeight { get; set; }   // Will be like '800px'
+        public String pageWidth { get; set; }    // Will be like '600px'
         public String type { get; set; }
         public Boolean signCompleted { get; set; }
         public String linkedTo { get; set; }
@@ -197,6 +199,8 @@ pdfPage.getParameters().put('DocTemplateId', id);*/
             Name = tab.Name;
             left = tab.JunoDoc__Pos_Left__c != null ? tab.JunoDoc__Pos_Left__c + 'px' : '0px';
             top = tab.JunoDoc__Pos_Top__c != null ? tab.JunoDoc__Pos_Top__c + 'px' : '0px';
+            pageHeight = tab.JunoDoc__Page_Height__c != null ? tab.JunoDoc__Page_Height__c + 'px' : '0px';
+            pageWidth = tab.JunoDoc__Page_Width__c != null ? tab.JunoDoc__Page_Width__c + 'px' : '0px';
             type = tab.JunoDoc__Type__c;
             signCompleted = tab.JunoDoc__Sign_Completed__c;
             linkedTo = String.valueOf(tab.JunoDoc__Linked_To__c);

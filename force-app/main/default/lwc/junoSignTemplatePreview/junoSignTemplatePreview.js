@@ -155,6 +155,7 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         const containerWidth = container.offsetWidth;
         console.log('Parent Width >> '+containerWidth);
         const containerHeight = container.offsetHeight;
+        console.log('Parent Height >> '+containerHeight);
         const rect = container.getBoundingClientRect();
         const x = Math.round(event.clientX - rect.left);
         const y = Math.round(event.clientY - rect.top);
@@ -165,6 +166,8 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
             type: this.dragElement,
             x: x,
             y: y,
+            pageHeight: containerHeight,
+            pageWidth: containerWidth,
             xpercent: (x/containerWidth)*100,
             ypercent: (y/containerHeight)*100,
             width: this.dragElement === 'signature' ? 200 : 150,
@@ -325,6 +328,8 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
                             // y: Number(ele.ypercent?.toFixed(2)),
                             x: ele.x,
                             y: ele.y,
+                            pageHeight: ele.pageHeight,
+                            pageWidth: ele.pageWidth,
                             pgno: Number(index) || 0,
                             typeLabel: ele.typeLabel || ele.type,
                             recipientOrder: Math.round(Number(ele.recipientOrder) || 1)
