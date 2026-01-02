@@ -258,7 +258,7 @@
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
                                 <p style="margin-bottom: 0.5rem; color: #6b7280;">Upload an image of your signature</p>
-                                <button class="btn btn-outline">Select Image</button>
+                                <!-- <button class="btn btn-outline">Select Image</button> -->
                                 <input type="file" id="signatureUpload" accept="image/*" style="display: none;" />
                             </div>
                         </div>
@@ -949,7 +949,6 @@
 
                 // Handle signature image upload
                 function handleSignatureImageUpload(e) {
-                        alert('upload')
                     if (e.target.files && e.target.files[0]) {
                         const file = e.target.files[0];
                         const reader = new FileReader();
