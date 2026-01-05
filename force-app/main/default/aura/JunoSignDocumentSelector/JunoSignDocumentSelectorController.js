@@ -237,5 +237,9 @@
         compEvent.fire();
     });
     
+},
+
+clearSelectedDocument : function(component, event, helper) {
+    component.set("v.selectedDocument", null);
 }
  })
