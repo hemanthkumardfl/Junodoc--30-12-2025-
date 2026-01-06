@@ -4,7 +4,7 @@ import createPageTabs from '@salesforce/apex/JunoSignTemplatePreviewCntrl.create
 import updatePageTabs from '@salesforce/apex/JunoSignTemplatePreviewCntrl.updatePageTabs';
 import insertRecipientsAndRows from '@salesforce/apex/JunoPrepareandSend.insertRecipientsAndRows';
 
-export default class JunoSignTemplatePreview extends LightningElement {receiverJson
+export default class JunoSignTemplatePreview extends LightningElement {
     @api setReplyTo;
     @api selectedDocumentsForsend;
     @api receiver;
@@ -18,14 +18,18 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
 
     @track recipients = [];
     @track elements = [];
-    @track selectedRecipient = '0'; // Default to first recipient
+    @track selectedRecipient = '0';
     @track isDraggingNew = false;
     @track showSendDialog = false;
     @track dragElement = null;
     @track previewElements = [];
     @track previewLoaded = false;
     @track base64Data = '';
+    @track inputType = 'text';
     
+    // NEW: Selected element for properties panel
+    @track selectedElement = null;
+
     dragState = {
         isDragging: false,
         elementId: null,
@@ -45,7 +49,6 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         this.boundMessageHandler = this.handleVFMessage.bind(this);
     }
 
-    // Getters
     get recipientsCount() {
         return this.recipients.length;
     }
@@ -69,17 +72,13 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
 
     get recipientOptions() {
         let recipients = this.receiver ? JSON.parse(JSON.stringify(this.receiver)) : [];
-        recipients = recipients.filter(ele => {
-            return ele.EmailType != 'CC';
-        })
-        this.recipients = recipients.map((recipient, index) => {
-            return {
-                ...recipient,
-                color: this.colorOptions[index % this.colorOptions.length],
-                order: index + 1,
-                id: '' + index
-            };
-        });
+        recipients = recipients.filter(ele => ele.EmailType != 'CC');
+        this.recipients = recipients.map((recipient, index) => ({
+            ...recipient,
+            color: this.colorOptions[index % this.colorOptions.length],
+            order: index + 1,
+            id: '' + index
+        }));
 
         return recipients.map((recipient, index) => ({
             label: recipient.Name,
@@ -92,7 +91,6 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         return '/apex/JunoTemplatePreviewVF?recordId=' + this.recordId + '&templateId=' + docSelected + '&selectedOption=' + this.selectedDocOption + '&parentOrigin=' + window.location.origin;
     }
 
-    // Lifecycle hooks
     connectedCallback() {
         window.addEventListener('message', this.boundMessageHandler);
         document.addEventListener('mousemove', this.boundMouseMove);
@@ -105,7 +103,6 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         document.removeEventListener('mouseup', this.boundMouseUp);
     }
 
-    // Event handlers
     handleVFMessage(event) {
         if (event.data?.pageImages && event.data.actionfrom === 'junodoc') {
             let pageImages = event.data.pageImages;
@@ -146,16 +143,13 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         event.dataTransfer.dropEffect = 'move';
     }
 
-     handleDrop(event) {
+    handleDrop(event) {
         event.preventDefault();
         if (!this.dragElement || !this.selectedRecipient) return;
  
         const container = event.currentTarget;
-        console.log(container)
         const containerWidth = container.offsetWidth;
-        console.log('Parent Width >> '+containerWidth);
         const containerHeight = container.offsetHeight;
-        console.log('Parent Height >> '+containerHeight);
         const rect = container.getBoundingClientRect();
         const x = Math.round(event.clientX - rect.left);
         const y = Math.round(event.clientY - rect.top);
@@ -164,6 +158,7 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         const newElement = {
             id: Date.now().toString(),
             type: this.dragElement,
+            fieldType: this.dragElement === 'checkbox' ? 'checkbox' : 'text',
             x: x,
             y: y,
             pageHeight: containerHeight,
@@ -176,8 +171,6 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
             label: `${this.dragElement.charAt(0).toUpperCase() + this.dragElement.slice(1)} Field`,
             required: true
         };
- 
-        console.log('newElement >> '+JSON.stringify(newElement));
  
         let previewElements = JSON.parse(JSON.stringify(this.previewElements));
         let eleWithMeta = this.getElementsWithMeta(newElement);
@@ -236,11 +229,9 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         const newX = Math.max(0, Math.min(event.clientX - rect.left - this.dragState.offsetX, rect.width - draggedElement.width));
         const newY = Math.max(0, Math.min(event.clientY - rect.top - this.dragState.offsetY, rect.height - draggedElement.height));
 
-        // Snap to grid
         const snappedX = Math.round(newX / 10) * 10;
         const snappedY = Math.round(newY / 10) * 10;
 
-        // Update element position
         draggedElement.x = snappedX;
         draggedElement.y = snappedY;
         draggedElement.elementStyle = `left: ${snappedX}px; top: ${snappedY}px; width: ${draggedElement.width}px; height: ${draggedElement.height}px;`;
@@ -270,24 +261,104 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
             previewElements[i].droppedEles = previewElements[i].droppedEles.filter(el => el.id !== elementId);
         }
         this.previewElements = [...previewElements];
+        this.selectedElement = null;
     }
 
-    // Helper methods
-    getElementsWithMeta(drpEle) {
-        const recipient = this.recipients.find(r => r.id === drpEle.recipientId);
-        const isBeingDragged = this.dragState.isDragging && this.dragState.elementId === drpEle.id;
-        
-        return {
-            ...drpEle,
-            recipientName: recipient ? recipient.Name : '',
-            recipientOrder: recipient ? recipient.order : 1,
-            recipientColor: recipient ? recipient.color : 'blue',
-            elementClass: `placed-element ${recipient ? recipient.color : 'blue'} ${isBeingDragged ? 'dragging' : ''}`,
-            elementStyle: `left: ${drpEle.x}px; top: ${drpEle.y}px; width: ${drpEle.width}px; height: ${drpEle.height}px;`,
-            iconName: this.getElementIcon(drpEle.type),
-            typeLabel: drpEle.type.charAt(0).toUpperCase() + drpEle.type.slice(1)
-        };
+    // NEW: Click on document background to deselect
+    handleDocumentClick(event) {
+        if (event.target.closest('.placed-element') === null) {
+            this.selectedElement = null;
+        }
     }
+
+    // NEW: Click on placed element to select it
+    handleElementClick(event) {
+        event.stopPropagation();
+        const elementId = event.currentTarget.dataset.elementId;
+        this.selectedElement = this.findElementById(elementId);
+        this.refreshAllElements();
+    }
+
+    // NEW: Find element in preview structure
+    findElementById(id) {
+        for (const page of this.previewElements) {
+            const elem = page.droppedEles.find(el => el.id === id);
+            if (elem) return elem;
+        }
+        return null;
+    }
+
+    // NEW: Refresh all elements with updated selection highlight
+    refreshAllElements() {
+        this.previewElements = this.previewElements.map(page => ({
+            ...page,
+            droppedEles: page.droppedEles.map(el => this.getElementsWithMeta(el))
+        }));
+    }
+
+    // NEW: Handle property changes (label, required, size)
+    handlePropertyChange(event) {
+    if (!this.selectedElement) return;
+
+    const property = event.target.dataset.property;
+    let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+
+    if (property === 'width' || property === 'height') {
+        value = Number(value);
+    }
+
+    // IMPORTANT: Update the actual object in the nested array
+    this.selectedElement[property] = value;
+
+    // Rebuild style with new dimensions
+    this.selectedElement.elementStyle = 
+        `left: ${this.selectedElement.x}px; top: ${this.selectedElement.y}px; width: ${this.selectedElement.width}px; height: ${this.selectedElement.height}px;`;
+
+    // Force refresh to update visual + classes
+    this.refreshAllElements();
+}
+
+    // NEW: Inline label edit (existing functionality preserved)
+    updateElementLabel(event) {
+        const elementId = event.target.dataset.elementId;
+        const newLabel = event.target.value;
+
+        for (const page of this.previewElements) {
+            const elem = page.droppedEles.find(el => el.id === elementId);
+            if (elem) {
+                elem.label = newLabel;
+                if (this.selectedElement && this.selectedElement.id === elementId) {
+                    this.selectedElement.label = newLabel;
+                }
+                break;
+            }
+        }
+        this.refreshAllElements();
+    }
+
+    handleLabelClick(event) {
+        event.stopPropagation();
+    }
+
+getElementsWithMeta(drpEle) {
+    const recipient = this.recipients.find(r => r.id === drpEle.recipientId);
+    const isSelected = this.selectedElement && this.selectedElement.id === drpEle.id;
+
+    console.log('drpEle width >> '+drpEle.width);
+    console.log('drpEle height >> '+drpEle.height);
+
+    return {
+        ...drpEle,
+        recipientName: recipient ? recipient.Name : '',
+        recipientOrder: recipient ? recipient.order : 1,
+        recipientColor: recipient ? recipient.color : 'blue',
+        elementClass: `placed-element ${recipient ? recipient.color : 'blue'} ${isSelected ? 'selected-element' : ''}`,
+        // Always use current x/y/width/height to build style
+        elementStyle: `left: ${drpEle.x}px; top: ${drpEle.y}px; width: ${drpEle.width}px; height: ${drpEle.height}px;`,
+        iconName: this.getElementIcon(drpEle.type),
+        typeLabel: drpEle.type.charAt(0).toUpperCase() + drpEle.type.slice(1)
+    };
+}
 
     getElementIcon(type) {
         switch (type) {
@@ -306,15 +377,13 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
         }));
     }
 
-    // Main send method
     @api
     handleSendForSignatures() {
         if (!this.selectedRecipient) {
             this.showToast('Error', 'Please select a recipient before sending', 'error');
             return;
         }
-        debugger;
-        // Validate and prepare dropped elements
+
         const allDropped = [];
         this.previewElements.forEach((page, index) => {
             if (page.droppedEles && Array.isArray(page.droppedEles)) {
@@ -322,10 +391,6 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
                     if (ele && ele.type) {
                         allDropped.push({
                             droptype: ele.type,
-                            /* x: Math.round(Number(ele.x) || 0),
-                            y: Math.round(Number(ele.y) || 0), */
-                            // x: Number(ele.xpercent?.toFixed(2)),
-                            // y: Number(ele.ypercent?.toFixed(2)),
                             x: ele.x,
                             y: ele.y,
                             pageHeight: ele.pageHeight,
@@ -339,21 +404,15 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
             }
         });
 
-        console.log('allDropped >> '+JSON.stringify(allDropped));
-
         if (allDropped.length === 0) {
             this.showToast('Warning', 'No signature elements to save', 'warning');
             return;
         }
 
         this.showSendDialog = true;
-        debugger;
 
         createPageTabs({ droppedElementsJson: JSON.stringify(allDropped) })
             .then(resultIds => {
-                console.log('Successfully saved', resultIds.length, 'elements');
-                //alert('JSON.stringify(this.receiver>>>>>>>>>>>>>>>>>>>>>>)'+JSON.stringify(this.receiver));
-                console.log('JSON.stringifythis.receiver>>>>>>>>>>>>>>>>>>>>>>'+JSON.stringify(this.receiver));
                 if (resultIds.length === 0) {
                     throw new Error('No elements were saved successfully');
                 }
@@ -398,8 +457,5 @@ export default class JunoSignTemplatePreview extends LightningElement {receiverJ
                     'error'
                 );
             });
- 
-
-        
     }
 }

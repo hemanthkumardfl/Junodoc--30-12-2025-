@@ -2734,7 +2734,7 @@
                             fieldNode.style.position = 'absolute';
                             fieldNode.style.left = leftPercent + '%';
                             fieldNode.style.top = topPercent + '%';
-
+                            console.log('type >> '+field.type);
                             // Handle different field types
                             if (field.type === 'text' || field.type === 'initial') {
                                 const fieldId = 'textList_' + pageId + '_' + field['Id'];
@@ -2826,6 +2826,36 @@
                                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
                                         </svg>
                                     </div>`;
+                            } else if (field.type === 'checkbox') {
+                                const fieldId = 'checkList_' + pageId + '_' + field['Id'];
+                                if (document.getElementById(fieldId)) continue;
+
+                                fieldNode.className = 'listitem checkboxList';
+                                fieldNode.id = fieldId;
+
+                                // optional order tracking
+                                fieldNode.setAttribute('data-checktype', 'checkbox');
+
+                                const checkboxHTML = isPhone
+                                    ? `
+                                        <label class="checkboxField"
+                                            >
+                                            <input type="checkbox"
+                                                data-type="checkbox"
+                                                onclick="handleCheckboxClick(event)"
+                                                style="cursor:pointer;" />
+                                        </label>
+                                    `
+                                    : `
+                                        <label class="checkboxField"
+                                            >
+                                            <input type="checkbox"
+                                                data-type="checkbox"
+                                                onclick="handleCheckboxClick(event)" />
+                                        </label>
+                                    `;
+
+                                fieldNode.innerHTML = checkboxHTML;
                             }
 
                             // Append to the correct page wrapper

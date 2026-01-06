@@ -236,3 +236,42 @@
     width: fit-content;   /* 🔑 key line */
     margin: 0 auto;       /* center if needed */
 }
+
+
+/* NEW: Selection and properties styles */
+.selected-element {
+    border: 2px solid #1589ee !important;
+    box-shadow: 0 0 0 3px rgba(21, 137, 238, 0.3);
+    z-index: 100;
+}
+
+.placed-element {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px dashed #706e6b;
+    padding: 8px;
+    min-width: 150px;
+    cursor: move;
+    transition: all 0.2s;
+}
+
+.placed-element:hover {
+    border-color: #1589ee;
+}
+
+.drag-handle {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: white;
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: move;
+}
+
+.remove-button {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+}
